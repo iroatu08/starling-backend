@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <title>Your booking details</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f6f2; margin: 0; padding: 0; color: #1b2a4a; }
+    .wrap { max-width: 620px; margin: 32px auto; background: #fff; border-radius: 12px; border: 1px solid #ece8df; overflow: hidden; }
+    .header { background: #041534; color: #fff; padding: 24px 28px; }
+    .header h1 { margin: 0; color: #fdce5d; font-size: 22px; font-family: Georgia, serif; }
+    .body { padding: 24px 28px; }
+    .row { display: flex; justify-content: space-between; padding: 6px 0; gap: 12px; font-size: 14px; }
+    .muted { color: #6b7280; font-size: 13px; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class='wrap'>
+    <div class='header'>
+      <h1>Starlings Hospitality</h1>
+      <p>Your travel notification</p>
+    </div>
+    <div class='body'>
+      <p>Hello {{firstName}} {{lastName}},</p>
+      <p>Your booking details are ready.</p>
+      <div class='row'><span>Booking reference</span><span>{{bookingReference}}</span></div>
+      {{#if destinationsSummary}}
+      <div class='row'><span>Destinations</span><span>{{destinationsSummary}}</span></div>
+      {{/if}}
+      <div class='row'><span>Payment reference</span><span>{{paystackReference}}</span></div>
+      <div class='row'><span>Paid at</span><span>{{paidAt}}</span></div>
+      <div class='row'><span>Total booking amount</span><span>NGN {{totalAmountNgn}}</span></div>
+      <div class='row'><span>Included items</span><span>{{itemCount}}</span></div>
+      <p class='muted'>Only your traveler details are included in this message for privacy.</p>
+    </div>
+  </div>
+</body>
+</html>

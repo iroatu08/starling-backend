@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Alert</title>
+  <style>
+    body { font-family: monospace; margin: 0; padding: 0; background: #1b2a4a; color: #f8f6f2; }
+    .container { max-width: 700px; margin: 40px auto; background: #0d1829; border-radius: 8px; overflow: hidden; border: 1px solid #c49a2d; }
+    .header { background: #c49a2d; padding: 20px 30px; }
+    .header h1 { color: #1b2a4a; margin: 0; font-size: 18px; }
+    .body { padding: 30px; }
+    .type { font-size: 20px; font-weight: bold; color: #c49a2d; margin-bottom: 16px; }
+    pre { background: #162036; padding: 20px; border-radius: 6px; overflow-x: auto; font-size: 13px; color: #a8c0d6; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 Starlings Admin Alert</h1>
+    </div>
+    <div class="body">
+      <div class="type">{{type}}</div>
+      <pre>{{payload}}</pre>
+    </div>
+  </div>
+</body>
+</html>

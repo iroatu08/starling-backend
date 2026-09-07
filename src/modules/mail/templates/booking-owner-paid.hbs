@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <title>Booking Payment Confirmation</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #f8f6f2; color: #1b2a4a; }
+    .container { max-width: 680px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #ece8df; }
+    .header { background: #041534; color: #fff; padding: 28px 32px; }
+    .header h1 { margin: 0; font-size: 24px; color: #fdce5d; font-family: Georgia, serif; }
+    .section { padding: 24px 32px; border-bottom: 1px solid #f0ece5; }
+    .section h2 { margin: 0 0 12px; font-size: 17px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #f0ece5; }
+    th { font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: .06em; }
+    .muted { color: #6b7280; font-size: 13px; }
+    .footer { padding: 18px 32px; color: #6b7280; font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class='container'>
+    <div class='header'>
+      <h1>Starlings Hospitality</h1>
+      <p>Your booking payment is confirmed.</p>
+    </div>
+    <div class='section'>
+      <h2>Owner details</h2>
+      <div class='row'><span>Name</span><span>{{ownerFirstName}} {{ownerLastName}}</span></div>
+      <div class='row'><span>Email</span><span>{{ownerEmail}}</span></div>
+      <div class='row'><span>Phone</span><span>{{ownerPhone}}</span></div>
+    </div>
+    <div class='section'>
+      <h2>Booking summary</h2>
+      <div class='row'><span>Booking reference</span><span>{{bookingReference}}</span></div>
+      <div class='row'><span>Payment reference</span><span>{{paystackReference}}</span></div>
+      <div class='row'><span>Amount paid</span><span>NGN {{amountNgn}}</span></div>
+      <div class='row'><span>Paid at</span><span>{{paidAt}}</span></div>
+    </div>
+    <div class='section'>
+      <h2>Travelers</h2>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          {{#each travelers}}
+          <tr>
+            <td>{{this.firstName}} {{this.lastName}}</td>
+            <td>{{this.email}}</td>
+            <td>{{this.phone}}</td>
+            <td>{{#if this.isPrimary}}Primary{{else}}Traveler{{/if}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    <div class='section'>
+      <h2>Line items</h2>
+      {{#if destinationsSummary}}
+      <p class='muted' style='margin-bottom:16px;'>Destinations: {{destinationsSummary}}</p>
+      {{/if}}
+      {{#each destinationGroups}}
+      <div style='margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #f0ece5;'>
+        <p style='font-weight:bold;margin:0 0 6px;'>{{this.destinationName}}{{#if this.country}} · {{this.country}}{{/if}}</p>
+        <p class='muted' style='margin:0 0 10px;font-size:12px;'>Subtotal NGN {{this.subtotalNgn}}</p>
+        {{#each this.lines}}
+        <div class='row'>
+          <span>{{this.title}} (×{{this.quantity}})</span>
+          <span>NGN {{this.lineTotalNgn}}</span>
+        </div>
+        {{/each}}
+      </div>
+      {{/each}}
+      <div class='row'><strong>Total</strong><strong>NGN {{totalAmountNgn}}</strong></div>
+      <p class='muted'>You can manage this booking from your Starlings dashboard.</p>
+    </div>
+    <div class='footer'>© 2026 Starlings Hospitality</div>
+  </div>
+</body>
+</html>

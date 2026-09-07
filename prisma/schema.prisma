@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+
+  @@map("users_role_enum")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+
+  @@map("bookings_status_enum")
+}
+
+enum PackageType {
+  visa_processing
+  hotel_reservation
+  free_taxi
+  airport_transfer
+  custom
+
+  @@map("packages_package_type_enum")
+}
+
+enum PaymentChannel {
+  card
+  bank_transfer
+  ussd
+  mobile_money
+
+  @@map("payments_channel_enum")
+}
+
+enum PaymentStatus {
+  pending
+  refund_pending
+  refunded
+  succeeded
+  failed
+
+  @@map("payments_status_enum")
+}
+
+enum RefundRequestStatus {
+  pending
+  approved
+  rejected
+  completed
+  failed
+
+  @@map("refund_requests_status_enum")
+}
+
+model User {
+  id                   String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                String    @unique @db.VarChar
+  passwordHash         String    @map("password_hash") @db.VarChar
+  firstName            String    @map("first_name") @db.VarChar
+  lastName             String    @map("last_name") @db.VarChar
+  phone                String?   @db.VarChar
+  address              String?   @db.VarChar
+  preferences          String?
+  role                 UserRole  @default(user)
+  isVerified           Boolean   @default(false) @map("is_verified")
+  isActive             Boolean   @default(true) @map("is_active")
+  verificationToken    String?   @map("verification_token") @db.VarChar
+  resetPasswordToken   String?   @map("reset_password_token") @db.VarChar
+  resetPasswordExpires DateTime? @map("reset_password_expires") @db.Timestamp(6)
+  refreshTokenHash     String?   @map("refresh_token_hash") @db.VarChar
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  bookings           Booking[]
+  cart               Cart?
+  destinationReviews DestinationReview[]
+  refundRequests     RefundRequest[]
+
+  @@map("users")
+}
+
+model Destination {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name         String   @db.VarChar
+  country      String   @db.VarChar
+  description  String
+  heroImageUrl String?  @map("hero_image_url") @db.VarChar
+  priceFromNgn Decimal  @default(0) @map("price_from_ngn") @db.Decimal(12, 2)
+  priceFromUsd Decimal  @default(0) @map("price_from_usd") @db.Decimal(10, 2)
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  isActive     Boolean  @default(true) @map("is_active")
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  bookingItems       BookingItem[]
+  cartItems          CartItem[]
+  destinationReviews DestinationReview[]
+  gallery            GalleryImage[]
+  packages           Package[]
+
+  @@map("destinations")
+}
+
+model Package {
+  id                 String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  destinationId      String      @map("destination_id") @db.Uuid
+  title              String      @db.VarChar
+  packageType        PackageType @default(custom) @map("package_type")
+  description        String?
+  isRemovable        Boolean     @default(true) @map("is_removable")
+  includesVisa       Boolean     @default(false) @map("includes_visa")
+  includesFlight     Boolean     @default(false) @map("includes_flight")
+  includesHotel      Boolean     @default(false) @map("includes_hotel")
+  includesActivities Boolean     @default(false) @map("includes_activities")
+  priceNgn           Decimal     @map("price_ngn") @db.Decimal(12, 2)
+  priceUsd           Decimal     @map("price_usd") @db.Decimal(10, 2)
+  durationDays       Int         @default(1) @map("duration_days")
+  maxCapacity        Int         @default(20) @map("max_capacity")
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime    @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  destination  Destination   @relation(fields: [destinationId], references: [id], onDelete: Cascade, map: "FK_4680b59442cfb27af4f96d0db57")
+  bookingItems BookingItem[]
+  cartItems    CartItem[]
+
+  @@map("packages")
+}
+
+model Cart {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  user  User       @relation(fields: [userId], references: [id], map: "FK_2ec1c94a977b940d85a4f498aea")
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id              String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cartId          String  @map("cart_id") @db.Uuid
+  packageId       String? @map("package_id") @db.Uuid
+  destinationId   String? @map("destination_id") @db.Uuid
+  quantity        Int     @default(1)
+  unitPriceNgn    Decimal @map("unit_price_ngn") @db.Decimal(12, 2)
+  bundleSnapshot  Json?   @map("bundle_snapshot")
+
+  cart        Cart         @relation(fields: [cartId], references: [id], onDelete: Cascade, map: "FK_6385a745d9e12a89b859bb25623")
+  package     Package?     @relation(fields: [packageId], references: [id], onDelete: SetNull, map: "FK_89be31cc7ba4670bb5f16059c6c")
+  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull, map: "FK_72680bb1e0604158d2fa93bf2e0")
+
+  @@map("cart_items")
+}
+
+model Booking {
+  id               String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  referenceNumber  String        @unique @map("reference_number") @db.VarChar
+  userId           String        @map("user_id") @db.Uuid
+  imageUrl         String?       @map("image_url") @db.VarChar
+  status           BookingStatus @default(pending)
+  totalAmountNgn   Decimal       @map("total_amount_ngn") @db.Decimal(12, 2)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user           User             @relation(fields: [userId], references: [id], map: "FK_64cd97487c5c42806458ab5520c")
+  items          BookingItem[]
+  travelers      BookingTraveler[]
+  payment        Payment?
+  refundRequests RefundRequest[]
+
+  @@map("bookings")
+}
+
+model BookingItem {
+  id                 String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  bookingId          String  @map("booking_id") @db.Uuid
+  packageId          String? @map("package_id") @db.Uuid
+  destinationId      String? @map("destination_id") @db.Uuid
+  quantity           Int     @default(1)
+  unitPriceNgn       Decimal @map("unit_price_ngn") @db.Decimal(12, 2)
+  bundleSnapshot     Json?   @map("bundle_snapshot")
+  originalTotalNgn   Decimal @default(0) @map("original_total_ngn") @db.Decimal(12, 2)
+  customizedTotalNgn Decimal @default(0) @map("customized_total_ngn") @db.Decimal(12, 2)
+  savingsNgn         Decimal @default(0) @map("savings_ngn") @db.Decimal(12, 2)
+
+  booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade, map: "FK_ef31cb9266b7deb19ad60847479")
+  package     Package?     @relation(fields: [packageId], references: [id], onDelete: SetNull, map: "FK_077a9f00795d186208ccf607eb4")
+  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull, map: "FK_8ad8b7ffdd84d6527507f1fbfc6")
+
+  @@map("booking_items")
+}
+
+model BookingTraveler {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  bookingId String   @map("booking_id") @db.Uuid
+  sortOrder Int      @default(0) @map("sort_order")
+  firstName String   @map("first_name") @db.VarChar
+  lastName  String   @map("last_name") @db.VarChar
+  email     String?  @db.VarChar
+  phone     String?  @db.VarChar
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, map: "FK_f862a7a07bf4700ed72e9b31c0d")
+
+  @@unique([bookingId, email], map: "UQ_booking_travelers_booking_email")
+  @@map("booking_travelers")
+}
+
+model Payment {
+  id                  String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  bookingId           String?         @unique @map("booking_id") @db.Uuid
+  paystackReference   String          @unique @map("paystack_reference") @db.VarChar
+  paystackAccessCode  String?         @map("paystack_access_code") @db.VarChar
+  amountNgn           Decimal         @map("amount_ngn") @db.Decimal(12, 2)
+  currency            String          @default("NGN") @db.VarChar
+  channel             PaymentChannel?
+  status              PaymentStatus   @default(pending)
+  paystackResponse    Json?           @map("paystack_response")
+  paidAt              DateTime?       @map("paid_at") @db.Timestamp(6)
+  userId              String          @map("user_id") @db.VarChar
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamp(6)
+
+  booking Booking? @relation(fields: [bookingId], references: [id], map: "FK_e86edf76dc2424f123b9023a2b2")
+
+  @@map("payments")
+}
+
+model RefundRequest {
+  id                      String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  bookingId               String               @map("booking_id") @db.Uuid
+  userId                  String               @map("user_id") @db.Uuid
+  status                  RefundRequestStatus  @default(pending)
+  reason                  String
+  requestedAmountNgn      Decimal              @map("requested_amount_ngn") @db.Decimal(12, 2)
+  adminId                 String?              @map("admin_id") @db.VarChar
+  resolvedAt              DateTime?            @map("resolved_at") @db.Timestamp(6)
+  paystackRefundReference String?              @map("paystack_refund_reference") @db.VarChar
+  failureReason           String?              @map("failure_reason")
+  createdAt               DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt               DateTime             @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, map: "FK_066a7fa3eb766591653f587d396")
+  user    User    @relation(fields: [userId], references: [id], map: "FK_228d14156b20be394872d6c3aaa")
+
+  @@map("refund_requests")
+}
+
+model GalleryImage {
+  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  destinationId       String?  @map("destination_id") @db.Uuid
+  cloudinaryPublicId  String   @map("cloudinary_public_id") @db.VarChar
+  url                 String   @db.VarChar
+  altText             String?  @map("alt_text") @db.VarChar
+  width               Int?
+  height              Int?
+  isFeatured          Boolean  @default(false) @map("is_featured")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  destination Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull, map: "FK_78da08ef8bcd4824f0f4ea35ed1")
+
+  @@map("gallery")
+}
+
+model DestinationReview {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  destinationId String   @map("destination_id") @db.Uuid
+  userId        String?  @map("user_id") @db.Uuid
+  authorName    String   @map("author_name") @db.VarChar
+  rating        Int
+  body          String
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  destination Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade, map: "FK_630b89e731f40f526fbc24b1f7e")
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull, map: "FK_f71632cef7eeaef7b2ebc7e64c6")
+
+  @@index([destinationId], map: "IDX_630b89e731f40f526fbc24b1f7")
+  @@map("destination_reviews")
+}
+
+model ContactSubmission {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String   @db.VarChar
+  email     String   @db.VarChar
+  subject   String?  @db.VarChar
+  message   String
+  budget    String?  @db.VarChar
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@map("contact_submissions")
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email     String   @unique @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@map("newsletter_subscribers")
+}

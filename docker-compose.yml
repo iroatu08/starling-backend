@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: starlings_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: starlings
+      POSTGRES_PASSWORD: starlings_pass
+      POSTGRES_DB: starlings_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - starlings_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U starlings -d starlings_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  starlings_pgdata:
